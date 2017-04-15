@@ -1,8 +1,8 @@
-import React from 'react';
-import {List, Map} from 'immutable';
+import React from 'react/addons';
+import {RouteHandler} from 'react-router';
 
 export default React.createClass({
-	render: function() {
-		return this.props.children;
-	}
+  render: function() {
+    return <RouteHandler />
+  }
 });

@@ -1,7 +1,6 @@
 import {List, Map} from 'immutable';
 import {expect} from 'chai';
-import {setEntries, next, vote} from '../src/core';
-
+import {setEntries, next, vote, restart} from '../src/core';
 
 describe('application logic', () => {
   describe('setEntries', () => {
@@ -10,7 +9,8 @@ describe('application logic', () => {
       const entries = List.of('Trainspotting', '28 Days Later');
       const nextState = setEntries(state, entries);
       expect(nextState).to.equal(Map({
-        entries: List.of('Trainspotting', '28 Days Later')
+        entries: List.of('Trainspotting', '28 Days Later'),
+        initialEntries: List.of('Trainspotting', '28 Days Later')
       }));
     });
 
@@ -19,7 +19,8 @@ describe('application logic', () => {
       const entries = ['Trainspotting', '28 Days Later'];
       const nextState = setEntries(state, entries);
       expect(nextState).to.equal(Map({
-        entries: List.of('Trainspotting', '28 Days Later')
+        entries: List.of('Trainspotting', '28 Days Later'),
+        initialEntries: List.of('Trainspotting', '28 Days Later')
       }));
     });
   });
@@ -40,65 +41,95 @@ describe('application logic', () => {
     });
 
     it('puts winner of current vote back to entries', () => {
-      const state = Map({
-        vote: Map({
-          round: 1,
-          pair: List.of('Trainspotting', '28 Days Later'),
-          tally: Map({
-            'Trainspotting': 4,
-            '28 Days Later': 2
-          })
-        }),
-        entries: List.of('Sunshine', 'Millions', '127 Hours')
-      });
-      const nextState = next(state);
-      expect(nextState).to.equal(Map({
-        vote: Map({
-          round: 2,
-          pair: List.of('Sunshine', 'Millions')
-        }),
-        entries: List.of('127 Hours', 'Trainspotting')
-      }));
+      expect(
+        next(Map({
+          vote: Map({
+            round: 1,
+            pair: List.of('Trainspotting', '28 Days Later'),
+            tally: Map({
+              'Trainspotting': 4,
+              '28 Days Later': 2
+            })
+          }),
+          entries: List.of('Sunshine', 'Millions', '127 Hours')
+        }))
+      ).to.equal(
+        Map({
+          vote: Map({
+            round: 2,
+            pair: List.of('Sunshine', 'Millions')
+          }),
+          entries: List.of('127 Hours', 'Trainspotting')
+        })
+      );
     });
 
     it('puts both from tied vote back to entries', () => {
-      const state = Map({
-        vote: Map({
-          round: 1,
-          pair: List.of('Trainspotting', '28 Days Later'),
-          tally: Map({
-            'Trainspotting': 3,
-            '28 Days Later': 3
-          })
-        }),
-        entries: List.of('Sunshine', 'Millions', '127 Hours')
-      });
-      const nextState = next(state);
-      expect(nextState).to.equal(Map({
-        vote: Map({
-          round: 2,
-          pair: List.of('Sunshine', 'Millions')
-        }),
-        entries: List.of('127 Hours', 'Trainspotting', '28 Days Later')
-      }));
+      expect(
+        next(Map({
+          vote: Map({
+            round: 1,
+            pair: List.of('Trainspotting', '28 Days Later'),
+            tally: Map({
+              'Trainspotting': 3,
+              '28 Days Later': 3
+            })
+          }),
+          entries: List.of('Sunshine', 'Millions', '127 Hours')
+        }))
+      ).to.equal(
+        Map({
+          vote: Map({
+            round: 2,
+            pair: List.of('Sunshine', 'Millions')
+          }),
+          entries: List.of('127 Hours', 'Trainspotting', '28 Days Later')
+        })
+      );
     });
 
     it('marks winner when just one entry left', () => {
-      const state = Map({
-        vote: Map({
-          round: 1,
-          pair: List.of('Trainspotting', '28 Days Later'),
-          tally: Map({
-            'Trainspotting': 4,
-            '28 Days Later': 2
-          })
-        }),
-        entries: List()
-      });
-      const nextState = next(state);
-      expect(nextState).to.equal(Map({
-        winner: 'Trainspotting'
-      }));
+      expect(
+        next(Map({
+          vote: Map({
+            round: 1,
+            pair: List.of('Trainspotting', '28 Days Later'),
+            tally: Map({
+              'Trainspotting': 4,
+              '28 Days Later': 2
+            })
+          }),
+          entries: List()
+        }))
+      ).to.equal(
+        Map({
+          winner: 'Trainspotting'
+        })
+      );
+    });
+  });
+
+  describe('restart', () => {
+    it('returns to initial entries and takes the first two entries under vote', () => {
+      expect(
+        restart(Map({
+          vote: Map({
+            round: 1,
+            pair: List.of('Trainspotting', 'Sunshine')
+          }),
+          entries: List(),
+          initialEntries: List.of('Trainspotting', '28 Days Later', 'Sunshine')
+        }))
+      ).to.equal(
+        Map({
+          vote: Map({
+            round: 2,
+            pair: List.of('Trainspotting', '28 Days Later')
+          }),
+          entries: List.of('Sunshine'),
+          initialEntries: List.of('Trainspotting', '28 Days Later', 'Sunshine')
+        })
+      );
     });
   });
 
@@ -192,4 +223,3 @@ describe('application logic', () => {
     });
   });
 });
-
