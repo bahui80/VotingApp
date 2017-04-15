@@ -1,12 +1,11 @@
-import React from 'react/addons';
-import {RouteHandler} from 'react-router';
+import React from 'react';
 import {ConnectionStateContainer} from './ConnectionState';
 
 export default React.createClass({
   render: function() {
     return <div>
       <ConnectionStateContainer />
-      <RouteHandler />
+      {this.props.children}
     </div>
   }
 });
